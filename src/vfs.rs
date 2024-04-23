@@ -19,6 +19,7 @@ use riot_sys::libc;
 
 use crate::error::{NegativeErrorExt, NumericError};
 use crate::helpers::{PointerToCStr, SliceToCStr};
+use crate::println;
 
 /// A file handle
 #[derive(Debug)]
@@ -71,6 +72,49 @@ impl File {
         })
     }
 
+    pub fn open_rw(path: &str) -> Result<Self, NumericError> {
+        println!("Opening file for R/W: {}", path);
+        let fileno = unsafe {
+            riot_sys::vfs_open(
+                path as *const str as *const libc::c_char,
+                (riot_sys::O_RDWR | riot_sys::O_CREAT) as _,
+                0644,
+            )
+        }.negative_to_error()?;
+        Ok(File {
+            fileno,
+            _not_send_sync: PhantomData,
+        })
+    }
+
+    pub fn open_with_mode(path: &str, mode: FileMode) -> Result<Self, NumericError> {
+        println!("Opening file {} with mode {:?}", path, &mode);
+        let mut flags = match mode {
+            FileMode::ReadOnly => { riot_sys::O_RDONLY }
+            FileMode::WriteOnly(append) => { if append { riot_sys::O_WRONLY | riot_sys::O_APPEND } else { riot_sys::O_WRONLY } }
+            FileMode::ReadWrite(append) => { if append { riot_sys::O_RDWR | riot_sys::O_APPEND } else { riot_sys::O_RDWR } }
+        };
+        flags |= riot_sys::O_CREAT;
+        println!("Flags: {} ", flags);
+        // int vfs_open(const char *name, int flags, mode_t mode)
+        let fileno = unsafe {
+            riot_sys::vfs_open(
+                path as *const str as *const libc::c_char,
+                flags as _,
+                0644,
+            )
+        }
+        .negative_to_error()?;
+        Ok(File {
+            fileno,
+            _not_send_sync: PhantomData,
+        })
+    }
+
+    pub fn exists() -> bool {
+        todo!("not implemented yet!")
+    }
+
     /// Obtain metadata of the file.
     pub fn stat(&self) -> Result<Stat, NumericError> {
         let mut stat = MaybeUninit::uninit();
@@ -103,6 +147,19 @@ impl File {
         (unsafe { riot_sys::vfs_lseek(self.fileno, off, whence) })
             .negative_to_error()
             .map(|r| r as _)
+    }
+
+    /// Write contents to the file.
+    pub fn write(&mut self, src: &[u8]) -> Result<usize, NumericError> {
+        (unsafe {
+            riot_sys::vfs_write(
+                self.fileno,
+                src.as_ptr() as *const libc::c_void,
+                src.len() as _,
+            )
+        })
+            .negative_to_error()
+            .map(|len| len as _)
     }
 }
 
