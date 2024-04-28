@@ -51,6 +51,8 @@ embedded-nal-async-0-7 = { package = "embedded-nal-async", version = "0.7.1", op
 embedded-io-async = { version = "0.6", optional = true }
 pin-utils = "0.1"
 pin-project = "1.0.11"
+embassy-time-driver = "0.1.0"
+embassy-time-queue-driver = "0.1.0"
 
 embedded-hal-async = { version = "1", optional = true }
 

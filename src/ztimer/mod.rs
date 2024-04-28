@@ -15,6 +15,9 @@ pub mod periodic;
 use core::convert::TryInto;
 use core::mem::ManuallyDrop;
 use core::pin::Pin;
+use core::task::Waker;
+use embassy_time_driver::{AlarmHandle, Driver, time_driver_impl};
+use embassy_time_queue_driver::TimerQueue;
 
 use pin_project::{pin_project, pinned_drop};
 
@@ -487,3 +490,35 @@ impl<const HZ: u32> PinnedDrop for RunningAsyncSleep<HZ> {
         }
     }
 }
+
+pub struct RiotDriver {}
+
+impl Driver for RiotDriver {
+    fn now(&self) -> u64 {
+        todo!("not implemented yet")
+    }
+
+    unsafe fn allocate_alarm(&self) -> Option<AlarmHandle> {
+        todo!("not implemented yet")
+    }
+
+    fn set_alarm_callback(&self, alarm: AlarmHandle, callback: fn(*mut ()), ctx: *mut ()) {
+        todo!("not implemented yet")
+    }
+
+    fn set_alarm(&self, alarm: AlarmHandle, timestamp: u64) -> bool {
+        todo!("not implemented yet")
+    }
+}
+
+time_driver_impl!(static DRIVER: RiotDriver = RiotDriver{});
+
+struct RiotTimerQueue{}
+
+impl TimerQueue for RiotTimerQueue {
+    fn schedule_wake(&'static self, at: u64, waker: &Waker) {
+        todo!("not implemented yet")
+    }
+}
+
+embassy_time_queue_driver::timer_queue_impl!(static QUEUE: RiotTimerQueue = RiotTimerQueue{});
