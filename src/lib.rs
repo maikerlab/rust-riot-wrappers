@@ -192,3 +192,6 @@ pub mod led;
 pub mod auto_init;
 
 mod async_helpers;
+
+#[cfg(riot_module_mtd_flashpage)]
+pub mod mtd;
